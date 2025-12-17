@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tombola di Natale</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body {
+box-sizing: border-box;
+}
+
+@keyframes slideUp {
+0% { transform: translateY(150%) scale(0.5); opacity: 0; }
+100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes snowfall {
+0% { transform: translateY(-10vh) rotate(0deg); }
+100% { transform: translateY(110vh) rotate(360deg); }
+}
+
+@keyframes bagShake {
+0%, 100% { transform: rotate(0deg) scale(1); }
+25% { transform: rotate(-15deg) scale(1.05); }
+50% { transform: rotate(15deg) scale(1.1); }
+75% { transform: rotate(-10deg) scale(1.05); }
+}
+
+@keyframes glow {
+0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+50% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.8); }
+}
+
+@keyframes popIn {
+0% { transform: scale(0.5); opacity: 0; }
+50% { transform: scale(1.1); }
+100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse {
+0%, 100% { transform: scale(1); }
+50% { transform: scale(1.05); }
+}
+
+.slide-up-animation {
+animation: slideUp 0.6s ease-out;
+}
+
+.bag-shake {
+animation: bagShake 1.2s ease-in-out;
+}
+
+.glow-effect {
+animation: glow 2s ease-in-out infinite;
+}
+
+.pop-in {
+animation: popIn 0.5s ease-out;
+}
+
+.pulse-animation {
+animation: pulse 0.3s ease-in-out;
+}
+
+.snowflake {
+position: fixed;
+top: -10vh;
+color: white;
+font-size: 1.5em;
+opacity: 0.8;
+pointer-events: none;
+animation: snowfall linear infinite;
+z-index: 1;
+}
+
+#snowfall-container {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+pointer-events: none;
+z-index: 1;
+}
+
+.santa-container {
+position: relative;
+width: 350px;
+height: 350px;
+display: flex;
+align-items: center;
+justify-content: center;
+cursor: pointer;
+transition: all 0.3s ease;
+margin-bottom: 30px;
+}
+
+.santa-container:hover {
+transform: scale(1.05);
+filter: brightness(1.1);
+}
+
+#santa-image {
+max-width: 100%;
+max-height: 100%;
+border-radius: 20px;
+box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+transition: all 0.3s ease;
+}
+
+.santa-static {
+display: block;
+}
+
+.santa-animated {
+display: none;
+}
+
+.is-animating .santa-static {
+display: none;
+}
+
+.is-animating .santa-animated {
+display: block;
+}
+
+.bingo-cell {
+width: 70px;
+height: 70px;
+display: flex;
+align-items: center;
+justify-content: center;
+background: rgba(255, 255, 255, 0.3);
+border-radius: 10px;
+transition: all 0.3s ease;
+position: relative;
+cursor: pointer;
+}
+
+.bingo-cell.extracted {
+background: linear-gradient(135deg, #22c55e, #16a34a);
+box-shadow: 0 4px 15px rgba(34, 197, 94, 0.5);
+}
+
+.bingo-cell.extracted:hover {
+transform: scale(1.05);
+box-shadow: 0 6px 20px rgba(34, 197, 94, 0.7);
+}
+
+.bingo-cell-number {
+font-size: 2rem;
+font-weight: bold;
+color: white;
+text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.bingo-board-container {
+background: rgba(220, 38, 38, 0.9);
+padding: 30px;
+border-radius: 20px;
+box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+border: 5px solid #fbbf24;
+max-width: 90vw;
+}
+
+/* Numero estratto display */
+.extracted-number-display {
+background: linear-gradient(135deg, #fbbf24, #f59e0b);
+padding: 40px;
+border-radius: 30px;
+box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+border: 5px solid white;
+text-align: center;
+min-width: 200px;
+}
+
+.extracted-number-display .number {
+font-size: 6rem;
+font-weight: bold;
+color: #dc2626;
+text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+line-height: 1;
+}
+
+.extracted-number-display .label {
+font-size: 1.5rem;
+font-weight: bold;
+color: white;
+text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+.bingo-cell {
+width: 50px;
+height: 50px;
+}
+.bingo-cell-number {
+font-size: 1.2rem;
+}
+.bingo-board-container {
+padding: 15px;
+}
+}
+</style>
+</head>
+<body class="h-full m-0 p-0 font-sans overflow-auto" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);">
+<div id="snowfall-container"></div>
+
+<div id="app-wrapper" class="min-h-full w-full flex flex-col items-center justify-center p-8 relative z-10">
+<h1 id="title" class="text-6xl font-bold text-white mb-8 text-center drop-shadow-lg">
+🎄 TOMBOLA di NATALE 🎄
+</h1>
+
+<!-- Santa Character -->
+<div class="santa-container" id="santa-container">
+<img
+id="santa-static"
+class="santa-static"
+src="https://i.ibb.co/cK3tZnf1/Black-and-White-Stationery-Notes-A4-Document.png"
+alt="Santa Claus"
+style="width: 350px; height: 350px; object-fit: contain;"
+/>
+<img
+id="santa-animated"
+class="santa-animated"
+src="https://i.ibb.co/21B29SF9/IMG-0008.gif"
+alt="Santa Claus Animated"
+style="width: 350px; height: 350px; object-fit: contain;"
+/>
+</div>
+
+<!-- Display numero estratto -->
+<div id="number-display" class="extracted-number-display hidden mb-8 pop-in">
+<div class="number" id="current-number">--</div>
+<div class="label">NUMERO ESTRATTO</div>
+</div>
+
+<button id="extract-btn" class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold text-2xl py-4 px-8 rounded-full shadow-lg transition-all duration-200 transform hover:scale-105 mb-8 glow-effect">
+🎁 Estrai Numero 🎁
+</button>
+
+<!-- Tabellone Tombola -->
+<div class="bingo-board-container mb-8">
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-3xl font-bold text-white drop-shadow-lg">TABELLONE</h2>
+<button id="reset-btn" class="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all duration-200 hover:scale-105">
+🔄 Reset
+</button>
+</div>
+<div id="bingo-board" class="grid grid-cols-9 gap-2">
+<!-- Le celle verranno generate dinamicamente -->
+</div>
+<div class="mt-4 text-center">
+<p class="text-white text-xl font-bold drop-shadow-md">
+Estratti: <span id="count" class="text-yellow-300">0</span>/90
+</p>
+</div>
+</div>
+
+<!-- Firma -->
+<div class="mt-8 text-center">
+<p class="text-white text-sm opacity-70 drop-shadow-md">
+Creato da <span class="font-semibold">Prof. D'Agata</span> ❄️
+</p>
+</div>
+</div>
+
+<script>
+let extractedNumbers = [];
+let availableNumbers = [];
+let isExtracting = false;
+
+// Inizializza i numeri da 1 a 90
+for (let i = 1; i <= 90; i++) {
+availableNumbers.push(i);
+}
+
+function initBingoBoard() {
+const bingoBoard = document.getElementById('bingo-board');
+bingoBoard.innerHTML = '';
+
+// Crea 90 celle (10 righe x 9 colonne)
+for (let i = 1; i <= 90; i++) {
+const cell = document.createElement('div');
+cell.className = 'bingo-cell';
+cell.id = `cell-${i}`;
+cell.setAttribute('data-number', i);
+cell.innerHTML = `<div class="bingo-cell-number">${i}</div>`;
+bingoBoard.appendChild(cell);
+}
+}
+
+function updateBingoCell(number) {
+const cell = document.getElementById(`cell-${number}`);
+if (!cell) return;
+
+cell.classList.add('extracted', 'pop-in');
+
+setTimeout(() => {
+cell.classList.remove('pop-in');
+}, 500);
+}
+
+function showExtractedNumber(number) {
+const numberDisplay = document.getElementById('number-display');
+const currentNumber = document.getElementById('current-number');
+
+currentNumber.textContent = number;
+numberDisplay.classList.remove('hidden');
+numberDisplay.classList.add('pop-in');
+
+setTimeout(() => {
+numberDisplay.classList.remove('pop-in');
+}, 500);
+}
+
+function extractNumber() {
+if (isExtracting) return;
+
+if (availableNumbers.length === 0) {
+alert('Tutti i numeri sono stati estratti! 🎉 Clicca Reset per ricominciare.');
+return;
+}
+
+isExtracting = true;
+
+const santaContainer = document.getElementById('santa-container');
+santaContainer.classList.add('is-animating');
+
+const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+const number = availableNumbers.splice(randomIndex, 1)[0];
+
+extractedNumbers.push(number);
+
+setTimeout(() => {
+santaContainer.classList.remove('is-animating');
+showExtractedNumber(number);
+updateBingoCell(number);
+updateCount();
+isExtracting = false;
+}, 5400);
+}
+
+function updateCount() {
+const count = document.getElementById('count');
+count.textContent = extractedNumbers.length;
+}
+
+function resetGame(event) {
+if (event) {
+event.preventDefault();
+event.stopPropagation();
+}
+
+const confirmed = confirm('Vuoi davvero resettare la tombola?');
+
+if (confirmed) {
+availableNumbers = [];
+for (let i = 1; i <= 90; i++) {
+availableNumbers.push(i);
+}
+extractedNumbers = [];
+isExtracting = false;
+
+const numberDisplay = document.getElementById('number-display');
+numberDisplay.classList.add('hidden');
+
+const santaContainer = document.getElementById('santa-container');
+santaContainer.classList.remove('is-animating');
+
+initBingoBoard();
+updateCount();
+}
+
+return false;
+}
+
+function createSnowflakes() {
+const snowfallContainer = document.getElementById('snowfall-container');
+const snowflakeCount = 50;
+
+for (let i = 0; i < snowflakeCount; i++) {
+const snowflake = document.createElement('div');
+snowflake.className = 'snowflake';
+snowflake.textContent = '❄';
+snowflake.style.left = Math.random() * 100 + '%';
+snowflake.style.animationDuration = (Math.random() * 3 + 5) + 's';
+snowflake.style.animationDelay = Math.random() * 5 + 's';
+snowflake.style.fontSize = (Math.random() * 1 + 0.5) + 'em';
+snowfallContainer.appendChild(snowflake);
+}
+}
+
+// Event Listeners
+document.getElementById('extract-btn').addEventListener('click', extractNumber);
+document.getElementById('santa-container').addEventListener('click', extractNumber);
+document.getElementById('reset-btn').addEventListener('click', resetGame);
+
+// Initialize
+createSnowflakes();
+initBingoBoard();
+updateCount();
+
+console.log('Tombola di Natale caricata con successo! 🎄');
+</script>
+</body>
+</html>
